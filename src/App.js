@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from "react"
 import { Moon, Sun } from "lucide-react"
 
@@ -24,36 +22,62 @@ const useTheme = () => {
 
 export default function Calculator() {
   const [display, setDisplay] = useState("0")
+  const [result, setResult] = useState(null) // To store the final result
+  const [expression, setExpression] = useState("") // To store the final expression
   const { theme, toggleTheme } = useTheme()
 
   const handleClick = (value) => {
     setDisplay((prev) => {
-      if (prev === "0" && value !== ".") {
-        return value
-      }
+      let sanitizedPrev = prev.replace(/X/g, "*")
+      const operators = ["/", "*", "-", "+"]
+
       if (value === "C") {
+        setResult(null) 
+        setExpression("") 
         return "0"
       }
+
+      if (value === "←") {
+        const newDisplay = prev.slice(0, -1) || "0"
+        return newDisplay
+      }
+
       if (value === "=") {
         try {
-          // return eval(prev).toString()
+          const sanitizedExpression = sanitizedPrev.replace(/[*/+-]$/, "") // Remove trailing operator before evaluation
+          const res = eval(sanitizedExpression).toString()
+          setExpression(prev) 
+          setResult(res) 
+          return res.replace(/\*/g, "X")
         } catch {
           return "Error"
         }
       }
-      return prev + value
+
+      const currentOperator = value === "X" ? "*" : value
+      const lastChar = sanitizedPrev[sanitizedPrev.length - 1]
+
+      // If last character is an operator and the new input is also an operator, replace the previous one
+      if (operators.includes(lastChar) && operators.includes(currentOperator)) {
+        return prev.slice(0, -1) + currentOperator.replace("*", "X")
+      }
+
+      // If initial value is "0", overwrite it unless the user types "."
+      if (prev === "0" && value !== ".") {
+        return value === "X" ? "X" : value
+      }
+
+      // Append the new value
+      return prev + (value === "X" ? "X" : value)
     })
   }
 
   const buttons = [
-    "/","X","-", "+",
-    "9","8", "7",  "6",
+    "/", "X", "-", "+",
+    "9", "8", "7", "6",
     "5", "4", "3", "2",
-    "1", "0", ".",  "=",
-     "C","00", 
-    
-    
-    
+    "1", "0", ".", "=",
+    "C", "←" 
   ]
 
   return (
@@ -65,61 +89,53 @@ export default function Calculator() {
             {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
           </button>
         </div>
+
+        {/* Placeholder for result (even if not yet calculated) */}
+        <div className="h-6 mb-2">
+          {expression && (
+            <p className="text-right text-lg font-semibold text-gray-600 dark:text-gray-300">
+              {expression.replace(/\*/g, "X")} = 
+            </p>
+          )}
+        </div>
+
         <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4">
           <input
             type="text"
             value={display}
             readOnly
-            className="w-full text-right  text-2xl font-bold bg-transparent text-gray-800 dark:text-white"
+            className="w-full text-right text-2xl font-bold bg-transparent text-gray-800 dark:text-white"
           />
         </div>
+
         <div className="grid grid-cols-4 gap-2">
           {buttons.map((btn) => (
             <button
               key={btn}
               onClick={() => handleClick(btn)}
               className={`p-3 rounded-lg text-lg font-semibold flex justify-center items-center
-                 ${
-                btn === "=" || btn === "C" 
+                ${btn === "=" || btn === "C"  
                   ? "bg-blue-500 text-white hover:bg-blue-600"
-                  : ""
-                  
-              }
-              
-               ${
-                btn === "+" || btn === "-" || btn === "/" || btn === "X" 
-                  ? "bg-orange-500 text-white hover:bg-orange-600 "
-                  : ""
-                  
-              } 
+                  : btn === "+" || btn === "-" || btn === "/" || btn === "X" || btn === "←"
+                  ? "bg-orange-500 text-white hover:bg-orange-600"
+                  : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"}
 
-               ${
-                 btn === "C" 
-                  ? " col-span-2"
-                  : "col-span-1"
-                  
-              }
-                  
-              ${
-                 btn === "=" 
-                  ? " row-span-2"
-                  : "row-span-1"
-                  
-              }
-                  
-              ${
-              btn === "C" || btn === "="  || btn === "+" || btn === "-" || btn === "/" || btn === "X"   ? "":"bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
-              }
-              transition-colors duration-200`}
+                  ${
+                  btn ==='='?"row-span-2":""
+                  }
+                  ${
+                  btn ==='C'?"col-span-2":""
+                  }
+                transition-colors duration-200`}
             >
               {btn}
             </button>
           ))}
         </div>
+
+        {/* Result is always shown below the input */}
+        
       </div>
     </div>
   )
 }
-
-
-
