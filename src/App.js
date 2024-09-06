@@ -104,7 +104,7 @@ export default function Calculator() {
             type="text"
             value={display}
             readOnly
-            className="w-full text-right text-2xl font-bold bg-transparent text-gray-800 dark:text-white"
+            className=" w-full text-right text-2xl font-bold bg-transparent text-gray-800 dark:text-white  outline-none"
           />
         </div>
 
