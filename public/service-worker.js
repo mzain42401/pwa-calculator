@@ -1,4 +1,5 @@
 /* eslint-env serviceworker */
+
 const CACHE_NAME = 'calculator-pwa-v1';
 const urlsToCache = [
   '/',
